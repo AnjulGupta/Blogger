@@ -1,0 +1,117 @@
+{% extends "layout.html" %} {% block header %}
+<title>{{ post[1] }} - {{ websiteName }}</title>
+<!-- @author : Giridhari -->
+<meta name="description" content="{{ post[3] }}">
+<script>
+function checkIfSure () {
+var sure = confirm("Are you sure you want to delete the post?");
+if (sure == true) {
+    window.location.assign("{{ url_for('postdelete', posturl=post[2]) }}");
+}}
+</script>
+
+<script type="text/javascript">
+  function extractComment(){
+    var comment = $('#comment').val();
+    comment = comment.replace(/(<([^>]+)>)/ig,"")
+    var today = new Date();
+        var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        var dateTime = date+' '+time;
+    var content2 = "<p><i class=\"fa fa-user\"></i> <b>Anonymous : </b>"+comment+"</p>";
+    $.ajax({
+      url:'/submit.comment/{{ post[2] }}',
+      method: 'POST',
+      data: { comment:comment },
+      success: function (result) {
+        var content = '<p> \
+                        <div style=\"float: left;\"> \
+                          <b> \
+                              <i class="fa fa-user"></i> '+ result +' \
+                          </b> : '+ comment +' \
+                        </div> \
+                        <p align=\"right\"><i class=\"fa fa-calendar\"> '+ dateTime +'</i></p> \
+                      </p>'
+        var res = document.getElementById("totalCmt").textContent;
+        document.getElementById("totalCmt").innerHTML = '<b><i class="fa fa-comments"></i>&nbsp;'+ (parseInt(res) + 1)+' Comments</b>';
+        if (result=="0") {
+          $('#noComment').empty();
+          $('#commetnDiv').append(content2);
+          document.getElementById("comment").value = '';
+        }
+        else{
+          $('#noComment').empty();
+          $('#commetnDiv').append(content);
+          document.getElementById("comment").value = '';
+        }
+      }  
+    });
+}
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="new-content" style="max-width:1400px">
+    <div class="new-row">
+      <div class="new-col l12 s12">
+        {% if post[5] == 1 %}
+        <div class="new-card-4 new-margin new-blue">
+        {% elif post[5]== 2 %}
+        <div class="new-card-4 new-margin new-light-red">
+        {% elif post[5]== 3 %}
+        <div class="new-card-4 new-margin new-orange">
+        {% else %}
+        <div class="new-card-4 new-margin new-white">
+        {% endif %}
+            <div class="new-container">
+              <h3 align="center"><b>{{ post[1] }}</b></h3>
+              <h5 align="center"><b><i class="fa fa-user"></i> </b>{{ user[0] }} - <span class="new-opacity"><b><i class="fa fa-calendar"></i></b> {{ post[6] }}</span></h5>
+            </div>
+            <div class="new-container">
+              <p>{{ post[3]|safe }}</p>
+              <div class="new-row">
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="post-footer">
+  <p>
+     {% if session.logged_in and session['userid'] == post[4]|int %}
+       <a class="button" href="{{ url_for('postedit', posturl=post[2]) }}"><i class="fa fa-edit"></i> Edit</a>
+        -
+        <a class="button" onclick="checkIfSure()"><i class="fa fa-times"></i> Delete</a>
+     {% endif %}</p>
+</div>
+<div>
+  <p id="totalCmt"><b><i class="fa fa-comments"></i> {{ comment|length }} Comments</b></p>
+  <hr>
+  <div id="commetnDiv">
+    {% for data in comment %}
+    <p>
+      <div style="float: left;">
+        <b>{% if not data.userid|int == 0 %}
+            <i class="fa fa-user"></i> {{data.fullname}}
+          {% else %} 
+            <i class="fa fa-user"></i> Anonymous
+          {% endif %}
+        </b> : {{data.comment}}
+      </div> 
+      <p align="right"><i class="fa fa-calendar"> {{data.cmttime}}</i></p>
+    </p>
+
+    {% else %}
+    <p id="noComment">No Comment! Be the first to comment.</p>
+    {% endfor %}
+  </div>
+  <hr>
+  <div class="formContainer">
+    <input type=text id="comment" name="comment" placeholder="Start the discussion...">
+    <button type=submit onclick="extractComment()" class="btn">Add Comment</button> 
+  </div>
+  <hr>
+</div>
+{% endblock %}
